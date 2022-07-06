@@ -264,8 +264,9 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	filter := d.Get("filter").(*schema.Set).List()
 
 	var instances []interface{}
-	instance := make(map[string]interface{})
 	for _, dbInstance := range resp.DBInstances {
+
+		instance := make(map[string]interface{})
 
 		instance["allocated_storage"] = dbInstance.AllocatedStorage
 		instance["auto_minor_version_upgrade"] = dbInstance.AutoMinorVersionUpgrade
