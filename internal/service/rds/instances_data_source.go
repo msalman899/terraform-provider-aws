@@ -55,6 +55,11 @@ func DataSourceInstances() *schema.Resource {
 							Computed: true,
 						},
 
+						"db_instance_identifier": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"allocated_storage": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -284,7 +289,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 		instance["db_cluster_identifier"] = dbInstance.DBClusterIdentifier
 		instance["db_instance_arn"] = dbInstance.DBInstanceArn
 		instance["db_instance_class"] = dbInstance.DBInstanceClass
-		instance["db_name"] = dbInstance.DBName
+		instance["db_instance_identifier"] = dbInstance.DBInstanceIdentifier
 		instance["resource_id"] = dbInstance.DbiResourceId
 
 		var parameterGroups []string
