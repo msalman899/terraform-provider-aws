@@ -194,24 +194,38 @@ func DataSourceClusters() *schema.Resource {
 func dataSourceClustersRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var clusters []interface{}
+	var clusters_paginate []*rds.DBCluster
 
 	params := &rds.DescribeDBClustersInput{}
 	log.Printf("[DEBUG] Reading RDS Cluster: %s", params)
-	resp, err := conn.DescribeDBClusters(params)
 
-	if err != nil {
-		return fmt.Errorf("Error retrieving RDS cluster: %w", err)
+	for true {
+
+		resp, err := conn.DescribeDBClusters(params)
+		if err != nil {
+			return fmt.Errorf("Error retrieving RDS cluster: %w", err)
+		}
+
+		clusters_paginate = append(clusters_paginate, resp.DBClusters...)
+
+		if resp.Marker != nil {
+			params.Marker = resp.Marker
+		} else {
+			break
+		}
 	}
 
-	if resp == nil {
-		return fmt.Errorf("Error retrieving RDS cluster: empty response for: %s", params)
+	if clusters_paginate == nil || len(clusters_paginate) < 1 || clusters_paginate[0] == nil {
+		d.SetId("db_clusters")
+		d.Set("clusters", clusters)
+		return nil
 	}
 
 	// var dbc *rds.DBCluster
 	filter := d.Get("filter").(*schema.Set).List()
 
-	var clusters []interface{}
-	for _, dbc := range resp.DBClusters {
+	for _, dbc := range clusters_paginate {
 
 		cluster := make(map[string]interface{})
 

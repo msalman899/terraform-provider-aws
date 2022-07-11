@@ -254,22 +254,36 @@ func DataSourceInstances() *schema.Resource {
 func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var instances []interface{}
+	var instances_paginate []*rds.DBInstance
 
 	opts := &rds.DescribeDBInstancesInput{}
 
-	resp, err := conn.DescribeDBInstances(opts)
-	if err != nil {
-		return err
+	for true {
+
+		resp, err := conn.DescribeDBInstances(opts)
+		if err != nil {
+			return err
+		}
+
+		instances_paginate = append(instances_paginate, resp.DBInstances...)
+
+		if resp.Marker != nil {
+			opts.Marker = resp.Marker
+		} else {
+			break
+		}
 	}
 
-	if resp == nil || len(resp.DBInstances) < 1 || resp.DBInstances[0] == nil {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+	if instances_paginate == nil || len(instances_paginate) < 1 || instances_paginate[0] == nil {
+		d.SetId("db_instances")
+		d.Set("instances", instances)
+		return nil
 	}
 
 	filter := d.Get("filter").(*schema.Set).List()
 
-	var instances []interface{}
-	for _, dbInstance := range resp.DBInstances {
+	for _, dbInstance := range instances_paginate {
 
 		instance := make(map[string]interface{})
 
