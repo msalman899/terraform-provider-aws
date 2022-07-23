@@ -1,6 +1,69 @@
-<a href="https://terraform.io">
-    <img src=".github/terraform_logo.svg" alt="Terraform logo" title="Terraform" align="right" height="50" />
-</a>
+# Fork of Terraform Provider for AWS
+
+Implementing AWS terraform datasources that are currently not available in official AWS terraform Provider
+
+## Available DataSources
+
+### RDS
+
+- aws_db_instances (filter RDS instances based on provided resource tags)
+- aws_rds_clusters (filter RDS clusters based on provided resource tags)
+
+## Usage
+
+```hcl
+terraform {
+  required_providers {
+    awscust = {
+      version = "5.1.2"
+      source  = "msalman899/aws"
+    }
+  }
+}
+
+provider "awscust" {
+    region = "eu-west-1"
+    profile = "my-account"
+}
+
+#---------------------------
+# aws_db_instances
+#---------------------------
+
+# Below data source will return all RDS instances that satisfy given tag's key-value criteria
+
+data "aws_db_instances" "database" {
+  provider = awscust
+  filter {
+    name = "team"
+    values = ["value1","value2","value3"]
+  }
+
+  filter {
+    name = "tribe"
+    values = ["value1","value2"]
+  }
+  
+  filter {
+    name = "tagkey"
+    values = ["tagvalue"]
+  }
+}
+
+#---------------------------
+# aws_rds_clusters
+#---------------------------
+
+# Below data source will return all RDS clusters that satisfy given tag's key-value criteria
+
+data "aws_rds_clusters" "database" {
+  provider = awscust
+  filter {
+    name = "tagkey"
+    values = ["tagvalue"]
+  }
+}
+```
 
 # Terraform Provider for AWS
 
