@@ -819,6 +819,7 @@ func Provider() *schema.Provider {
 			"aws_rds_certificate":           rds.DataSourceCertificate(),
 			"aws_rds_cluster":               rds.DataSourceCluster(),
 			"aws_rds_clusters":              rds.DataSourceClusters(),
+			"aws_rds":                       rds.DataSourceRds(),
 			"aws_rds_engine_version":        rds.DataSourceEngineVersion(),
 			"aws_rds_orderable_db_instance": rds.DataSourceOrderableInstance(),
 
