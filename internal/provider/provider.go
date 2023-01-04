@@ -626,9 +626,11 @@ func Provider() *schema.Provider {
 			"aws_eks_node_group":    eks.DataSourceNodeGroup(),
 			"aws_eks_node_groups":   eks.DataSourceNodeGroups(),
 
-			"aws_elasticache_cluster":           elasticache.DataSourceCluster(),
-			"aws_elasticache_replication_group": elasticache.DataSourceReplicationGroup(),
-			"aws_elasticache_user":              elasticache.DataSourceUser(),
+			"aws_elasticache_cluster":            elasticache.DataSourceCluster(),
+			"aws_elasticache_clusters":           elasticache.DataSourceClusters(),
+			"aws_elasticache_replication_group":  elasticache.DataSourceReplicationGroup(),
+			"aws_elasticache_replication_groups": elasticache.DataSourceReplicationGroups(),
+			"aws_elasticache_user":               elasticache.DataSourceUser(),
 
 			"aws_elastic_beanstalk_application":    elasticbeanstalk.DataSourceApplication(),
 			"aws_elastic_beanstalk_hosted_zone":    elasticbeanstalk.DataSourceHostedZone(),

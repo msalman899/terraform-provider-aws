@@ -751,6 +751,28 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 	return d.Set("cache_nodes", cacheNodeData)
 }
 
+func setCacheNodeDataCust(c *elasticache.CacheCluster) ([]map[string]interface{}, error) {
+	sortedCacheNodes := make([]*elasticache.CacheNode, len(c.CacheNodes))
+	copy(sortedCacheNodes, c.CacheNodes)
+	sort.Sort(byCacheNodeId(sortedCacheNodes))
+
+	cacheNodeData := make([]map[string]interface{}, 0, len(sortedCacheNodes))
+
+	for _, node := range sortedCacheNodes {
+		if node.CacheNodeId == nil || node.Endpoint == nil || node.Endpoint.Address == nil || node.Endpoint.Port == nil || node.CustomerAvailabilityZone == nil {
+			return cacheNodeData, fmt.Errorf("Unexpected nil pointer in: %s", node)
+		}
+		cacheNodeData = append(cacheNodeData, map[string]interface{}{
+			"id":                aws.StringValue(node.CacheNodeId),
+			"address":           aws.StringValue(node.Endpoint.Address),
+			"port":              aws.Int64Value(node.Endpoint.Port),
+			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
+		})
+	}
+
+	return cacheNodeData, nil
+}
+
 type byCacheNodeId []*elasticache.CacheNode
 
 func (b byCacheNodeId) Len() int      { return len(b) }
