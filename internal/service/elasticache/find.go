@@ -10,6 +10,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
 // FindReplicationGroupByID retrieves an ElastiCache Replication Group by id.
 func FindReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticache.ReplicationGroup, error) {
 	input := &elasticache.DescribeReplicationGroupsInput{
@@ -34,6 +44,29 @@ func FindReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasti
 	}
 
 	return output.ReplicationGroups[0], nil
+}
+
+func FindReplicationGroups(conn *elasticache.ElastiCache) ([]*elasticache.ReplicationGroup, error) {
+	input := &elasticache.DescribeReplicationGroupsInput{}
+	output, err := conn.DescribeReplicationGroups(input)
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ReplicationGroups) == 0 || output.ReplicationGroups[0] == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.ReplicationGroups, nil
 }
 
 // FindReplicationGroupMemberClustersByID retrieves all of an ElastiCache Replication Group's MemberClusters by the id of the Replication Group.
@@ -122,6 +155,27 @@ func FindCacheClustersByID(conn *elasticache.ElastiCache, idList []string) ([]*e
 		}
 
 		return len(ids) != 0
+	})
+
+	return results, err
+}
+
+// FindCacheClusters retrieves all ElastiCache Cache Clusters.
+// Order of the clusters is not guaranteed.
+func FindCacheClusters(conn *elasticache.ElastiCache) ([]*elasticache.CacheCluster, error) {
+	var results []*elasticache.CacheCluster
+
+	input := &elasticache.DescribeCacheClustersInput{}
+	err := conn.DescribeCacheClustersPages(input, func(page *elasticache.DescribeCacheClustersOutput, _ bool) bool {
+		if page == nil || page.CacheClusters == nil || len(page.CacheClusters) == 0 {
+			return true
+		}
+
+		for _, v := range page.CacheClusters {
+			results = append(results, v)
+		}
+
+		return len(page.CacheClusters) != 0
 	})
 
 	return results, err
