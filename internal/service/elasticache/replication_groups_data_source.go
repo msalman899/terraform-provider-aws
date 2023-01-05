@@ -158,7 +158,7 @@ func dataSourceReplicationGroupsRead(d *schema.ResourceData, meta interface{}) e
 
 	var replication_groups []interface{}
 	replication_groups_paginate, err := FindReplicationGroups(conn)
-	if err != nil {
+	if err != nil && err.Error() != "empty result" {
 		return fmt.Errorf("error reading ElastiCache Replication Group %w", err)
 	}
 
