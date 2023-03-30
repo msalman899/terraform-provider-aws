@@ -157,9 +157,23 @@ func dataSourceReplicationGroupsRead(d *schema.ResourceData, meta interface{}) e
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var replication_groups []interface{}
-	replication_groups_paginate, err := FindReplicationGroups(conn)
-	if err != nil && err.Error() != "empty result" {
-		return fmt.Errorf("error reading ElastiCache Replication Group %w", err)
+	var replication_groups_paginate []*elasticache.ReplicationGroup
+	params := &elasticache.DescribeReplicationGroupsInput{}
+
+	for true {
+
+		resp, err, Marker := FindReplicationGroups(conn, params)
+		if err != nil && err.Error() != "empty result" {
+			return fmt.Errorf("error reading ElastiCache Replication Group %w", err)
+		}
+
+		replication_groups_paginate = append(replication_groups_paginate, resp...)
+
+		if Marker != nil {
+			params.Marker = Marker
+		} else {
+			break
+		}
 	}
 
 	if replication_groups_paginate == nil || len(replication_groups_paginate) < 1 || replication_groups_paginate[0] == nil {
@@ -205,8 +219,7 @@ func dataSourceReplicationGroupsRead(d *schema.ResourceData, meta interface{}) e
 			replication_group["configuration_endpoint_address"] = rg.ConfigurationEndpoint.Address
 		} else {
 			if rg.NodeGroups == nil {
-				d.SetId("")
-				return fmt.Errorf("ElastiCache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
+				log.Printf("[WARN] ElastiCache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
 			}
 			replication_group["port"] = rg.NodeGroups[0].PrimaryEndpoint.Port
 			replication_group["primary_endpoint_address"] = rg.NodeGroups[0].PrimaryEndpoint.Address

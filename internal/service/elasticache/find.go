@@ -46,27 +46,26 @@ func FindReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasti
 	return output.ReplicationGroups[0], nil
 }
 
-func FindReplicationGroups(conn *elasticache.ElastiCache) ([]*elasticache.ReplicationGroup, error) {
-	input := &elasticache.DescribeReplicationGroupsInput{}
+func FindReplicationGroups(conn *elasticache.ElastiCache, input *elasticache.DescribeReplicationGroupsInput) ([]*elasticache.ReplicationGroup, error, *string) {
 	output, err := conn.DescribeReplicationGroups(input)
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
-		}
+		}, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, err, nil
 	}
 
 	if output == nil || len(output.ReplicationGroups) == 0 || output.ReplicationGroups[0] == nil {
 		return nil, &resource.NotFoundError{
 			Message:     "empty result",
 			LastRequest: input,
-		}
+		}, nil
 	}
 
-	return output.ReplicationGroups, nil
+	return output.ReplicationGroups, nil, output.Marker
 }
 
 // FindReplicationGroupMemberClustersByID retrieves all of an ElastiCache Replication Group's MemberClusters by the id of the Replication Group.
